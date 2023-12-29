@@ -1,4 +1,3 @@
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,6 +15,9 @@ public class snakegame extends JFrame implements ActionListener, KeyListener {
     private ArrayList<Point> snake;
     private Point food;
     private int direction; // 0: up, 1: right, 2: down, 3: left
+    private int score;
+    private int speed;
+    private Timer timer;
 
     public snakegame() {
         setTitle("Snake Game");
@@ -27,10 +29,12 @@ public class snakegame extends JFrame implements ActionListener, KeyListener {
         snake = new ArrayList<>();
         snake.add(new Point(GRID_SIZE / 2, GRID_SIZE / 2));
         direction = 1; // initial direction: right
+        score = 0;
+        speed = 100; // initial speed
 
         generateFood();
 
-        Timer timer = new Timer(100, this);
+        timer = new Timer(speed, this);
         timer.start();
 
         addKeyListener(this);
@@ -75,6 +79,8 @@ public class snakegame extends JFrame implements ActionListener, KeyListener {
         if (newHead.equals(food)) {
             snake.add(0, food);
             generateFood();
+            score += 10;
+            updateSpeed(); // Increase speed after eating food
         } else {
             snake.add(0, newHead);
             snake.remove(snake.size() - 1);
@@ -86,9 +92,33 @@ public class snakegame extends JFrame implements ActionListener, KeyListener {
         }
     }
 
+    private void updateSpeed() {
+        if (speed > 20) {
+            speed -= 5; // Increase speed by reducing timer delay
+            timer.setDelay(speed);
+        }
+    }
+
     private void gameOver() {
-        JOptionPane.showMessageDialog(this, "Game Over!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
-        System.exit(0);
+        int choice = JOptionPane.showConfirmDialog(this, "Your score is " + score + ". Do you want to play again?",
+                "Game Over", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+
+        if (choice == JOptionPane.YES_OPTION) {
+            resetGame();
+        } else {
+            System.exit(0);
+        }
+    }
+
+    private void resetGame() {
+        snake.clear();
+        snake.add(new Point(GRID_SIZE / 2, GRID_SIZE / 2));
+        direction = 1;
+        score = 0;
+        speed = 100;
+        generateFood();
+        timer.setDelay(speed);
+        timer.start();
     }
 
     @Override
@@ -138,6 +168,10 @@ public class snakegame extends JFrame implements ActionListener, KeyListener {
         // Draw the food
         g.setColor(Color.RED);
         g.fillRect(food.x * CELL_SIZE, food.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+
+        // Draw score
+        g.setColor(Color.BLACK);
+        g.drawString("Score: " + score, 10, 15);
 
         // Draw grid lines
         g.setColor(Color.BLACK);
